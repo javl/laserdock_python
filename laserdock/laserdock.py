@@ -1,3 +1,4 @@
+import argparse
 import logging
 import struct
 import time
@@ -10,6 +11,10 @@ from tqdm import tqdm
 from laserdock import constants as const
 
 logger = logging.getLogger(__name__)
+
+parser = argparse.ArgumentParser(prog='laserdock', description='LaserCube control')
+parser.add_argument('-d', '--dummy', help='Run without connecting to a real device', action='store_true')
+args = parser.parse_args()
 
 
 def sleep_until(time_to_wake):
@@ -27,24 +32,28 @@ class LaserDock:
 
     def __init__(self):
         self.packet_samples = []
-        self.dev = self.connect()
-        self.get_version_major_number()
-        self.get_version_minor_number()
-        self.get_max_dac_rate()
-        self.get_min_dac_value()
-        self.get_max_dac_value()
-        self.set_dac_rate(const.FPS)
-        self.get_dac_rate()
-        self.clear_ringbuffer()
-        self.get_sample_element_count()
-        self.get_iso_packet_sample_count()
-        self.get_bulk_packet_sample_count()
-        self.enable_output()
-        self.get_output()
-        self.last_packet_send_time = time.monotonic()
+        if args.dummy:
+            print('Running in dummy mode without connecting to a real device')
+        else:
+            self.dev = self.connect()
+            self.get_version_major_number()
+            self.get_version_minor_number()
+            self.get_max_dac_rate()
+            self.get_min_dac_value()
+            self.get_max_dac_value()
+            self.set_dac_rate(const.FPS)
+            self.get_dac_rate()
+            self.clear_ringbuffer()
+            self.get_sample_element_count()
+            self.get_iso_packet_sample_count()
+            self.get_bulk_packet_sample_count()
+            self.enable_output()
+            self.get_output()
+            self.last_packet_send_time = time.monotonic()
 
     @staticmethod
     def connect():
+
         # find our device
         dev = usb.core.find(idVendor=const.LASERDOCK_VENDOR, idProduct=const.LASERDOCK_PRODUCT)
 
@@ -108,8 +117,12 @@ class LaserDock:
     def write_bulk(self, msg):
         try:
             self.dev[0][(1, 0)][0].write(msg)
-        except Exception:
-            self.reconnect()
+        except AttributeError:
+            if not args.dummy:
+                self.reconnect()
+        except Exception as e:
+            # print the uncaptured exception
+            print(f'Uncaught exception in write_bulk: {e}')
 
     def read_ctrl(self):
         packet_size = self.dev[0][(0, 0)][1].wMaxPacketSize
