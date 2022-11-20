@@ -5,7 +5,7 @@ import random
 import sys
 
 from image_parser.image_parser import ImageParser
-from laserdock.laser_dock import LaserDock
+from laserdock.laserdock import LaserDock
 
 BASE_LOGGING_CONFIG = {
     'version': 1,
