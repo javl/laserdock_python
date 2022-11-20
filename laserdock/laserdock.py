@@ -21,7 +21,6 @@ def sleep_until(time_to_wake):
     # wait here for time to be ready
     while time.monotonic() < time_to_wake:
         time_to_wait = time_to_wake - time.monotonic()
-        sleep_time = min(time_to_wait, 1)
         # logger.warning(f'sleeping for {sleep_time}')
         time.sleep(min(time_to_wait, 1))  # sleep the minimum of the correct time and 1 second
 
@@ -53,13 +52,10 @@ class LaserDock:
 
     @staticmethod
     def connect():
-
-        # find our device
         dev = usb.core.find(idVendor=const.LASERDOCK_VENDOR, idProduct=const.LASERDOCK_PRODUCT)
-
-        # was it found?
         if dev is None:
-            raise ValueError('Device not found')
+            raise ValueError('No LaserDock/LaserCube found')
+
         c = 1
         for config in dev:
             print('config', c)
@@ -121,7 +117,6 @@ class LaserDock:
             if not args.dummy:
                 self.reconnect()
         except Exception as e:
-            # print the uncaptured exception
             print(f'Uncaught exception in write_bulk: {e}')
 
     def read_ctrl(self):
