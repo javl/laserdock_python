@@ -35,19 +35,19 @@ class LaserDock:
             print('Running in dummy mode without connecting to a real device')
         else:
             self.dev = self.connect()
-            self.get_version_major_number()
-            self.get_version_minor_number()
-            self.get_max_dac_rate()
-            self.get_min_dac_value()
-            self.get_max_dac_value()
+            self.get_setting(const.COMMAND_MAJOR_FIRMWARE,               'Major Firmware Version')
+            self.get_setting(const.COMMAND_MINOR_FIRMWARE,               'Minor Firmware Version')
+            self.get_setting(const.COMMAND_GET_MAX_DAC_RATE,             'Max DAC Rate')
+            self.get_setting(const.COMMAND_GET_MIN_DAC_VALUE,            'Min DAC Value')
+            self.get_setting(const.COMMAND_GET_MAX_DAC_VALUE,            'Max DAC Value')
             self.set_dac_rate(const.FPS)
-            self.get_dac_rate()
+            self.get_setting(const.COMMAND_GET_DAC_RATE,                 'Current DAC Rate')  # guint32
             self.clear_ringbuffer()
-            self.get_sample_element_count()
-            self.get_iso_packet_sample_count()
-            self.get_bulk_packet_sample_count()
+            self.get_setting(const.COMMAND_GET_SAMPLE_ELEMENT_COUNT,     'Get Sample Element Count')
+            self.get_setting(const.COMMAND_GET_ISO_PACKET_SAMPLE_COUNT,  'Get ISO Packet Sample Count')
+            self.get_setting(const.COMMAND_GET_BULK_PACKET_SAMPLE_COUNT, 'Get Bulk Packet Sample Count')
             self.enable_output()
-            self.get_output()
+            self.get_setting(const.COMMAND_GET_OUTPUT_STATE,             'Current Output Status')  # guint8
             self.last_packet_send_time = time.monotonic()
 
     @staticmethod
@@ -137,23 +137,13 @@ class LaserDock:
         self.write_ctrl(b'\x80\x00')
         print(self.read_ctrl())
 
-    def get_output(self):
-        """guint8"""
-        self.write_ctrl(const.COMMAND_GET_OUTPUT_STATE)
+    def get_setting(self, cmd, label):
+        self.write_ctrl(cmd)
         response = self.read_ctrl()[:4]
         command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_OUTPUT_STATE):
+        if command != ord(cmd):
             raise Exception('Bad response')
-        print(f'Current Output Status: {response}')
-
-    def get_dac_rate(self):
-        """guint32"""
-        self.write_ctrl(const.COMMAND_GET_DAC_RATE)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_DAC_RATE):
-            raise Exception('Bad response')
-        print(f'Current DAC Rate: {response}')
+        print(f'{label}: {response}')
 
     def set_dac_rate(self, rate):
         """suint32(d->devh_ctl, 0x82, rate);"""
@@ -164,71 +154,6 @@ class LaserDock:
         if command != ord(const.COMMAND_SET_DAC_RATE):
             raise Exception('Bad response')
         print(f'Response after setting DAC rate: {response}')
-
-    def get_max_dac_rate(self):
-        self.write_ctrl(const.COMMAND_GET_MAX_DAC_RATE)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_MAX_DAC_RATE):
-            raise Exception('Bad response')
-        print(f'Max DAC Rate: {response}')
-
-    def get_min_dac_value(self):
-        self.write_ctrl(const.COMMAND_GET_MIN_DAC_VALUE)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_MIN_DAC_VALUE):
-            raise Exception('Bad response')
-        print(f'Min DAC Value: {response}')
-
-    def get_max_dac_value(self):
-        self.write_ctrl(const.COMMAND_GET_MAX_DAC_VALUE)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_MAX_DAC_VALUE):
-            raise Exception('Bad response')
-        print(f'Max DAC Value: {response}')
-
-    def get_sample_element_count(self):
-        self.write_ctrl(const.COMMAND_GET_SAMPLE_ELEMENT_COUNT)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_SAMPLE_ELEMENT_COUNT):
-            raise Exception('Bad response')
-        print(f'get_sample_element_count: {response}')
-
-    def get_iso_packet_sample_count(self):
-        self.write_ctrl(const.COMMAND_GET_ISO_PACKET_SAMPLE_COUNT)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_ISO_PACKET_SAMPLE_COUNT):
-            raise Exception('Bad response')
-        print(f'get_iso_packet_sample_count: {response}')
-
-    def get_bulk_packet_sample_count(self):
-        self.write_ctrl(const.COMMAND_GET_BULK_PACKET_SAMPLE_COUNT)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_GET_BULK_PACKET_SAMPLE_COUNT):
-            raise Exception('Bad response')
-        print(f'get_bulk_packet_sample_count: {response}')
-
-    def get_version_major_number(self):
-        """Return the major version number in the firmware"""
-        self.write_ctrl(const.COMMAND_MAJOR_FIRMWARE)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_MAJOR_FIRMWARE):
-            raise Exception('Bad response')
-        print(f'Major Firmware Version: {response}')
-
-    def get_version_minor_number(self):
-        self.write_ctrl(const.COMMAND_MINOR_FIRMWARE)
-        response = self.read_ctrl()[:4]
-        command, response = struct.unpack('<HH', response)
-        if command != ord(const.COMMAND_MINOR_FIRMWARE):
-            raise Exception('Bad response')
-        print(f'Minor Firmware Version: {response}')
 
     def get_ringbuffer_sample_count(self):
         self.write_ctrl(const.COMMAND_GET_RINGBUFFER_SAMPLE_COUNT)
