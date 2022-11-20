@@ -36,10 +36,10 @@ if __name__ == '__main__':
     LD = LaserDock()
     buffer = CircleBuffer(circle_steps=3000)
     samples_per_pkt = 64
-    packet_samples = buffer.fill_samples(samples_per_packet=samples_per_pkt)
-    LD.packet_samples = packet_samples
     while True:
         try:
+            packet_samples = buffer.fill_samples(samples_per_packet=samples_per_pkt)
+            LD.packet_samples = packet_samples
             LD.send_samples()
         except KeyboardInterrupt:
             print('\ninterrupt!')
