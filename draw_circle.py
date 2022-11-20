@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 
-from laserdock_python.laserdock.laser_dock import LaserDock
+from laserdock.laser_dock import LaserDock
 
 
 def float_to_laserdock_xy(val):

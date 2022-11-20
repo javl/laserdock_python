@@ -4,7 +4,7 @@ import os
 from PIL import Image
 from tqdm import tqdm
 
-from laserdock_python.laserdock.laser_dock import LaserDock
+from laserdock.laser_dock import LaserDock
 
 logger = logging.getLogger(__name__)
 
