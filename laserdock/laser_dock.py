@@ -240,9 +240,12 @@ class LaserDock:
             raise Exception('Bad response')
         print(f'Response from set ringbuffer command: {response}')
 
-    def send_samples(self):
+    def send_samples(self, packet_samples=None):
         # this one uses the bulk transfer
         # logger.warning('sending samples')
+        if (packet_samples):
+            self.packet_samples = packet_samples
+
         msg = b''
         for sample in self.packet_samples:
             msg += struct.pack('<B', sample['r'])
