@@ -4,13 +4,8 @@ from laserdock.laser_dock import LaserDock
 
 
 def float_to_laserdock_xy(val):
-    """The Laserdock has a resolution of 4096x4096.  This method converts a grid ranging from:
-    -1<=x<=1 and -1<=y<=1
-    to
-    0<=x<=4095 and 0<=y<=4095
-    """
-    result = int(4095.0 * (val + 1.0) / 2.0)
-    return result
+    """Convert a float from -1 to 1 to a LaserDock XY value of 0 to 4906"""
+    return int(4095 * (val + 1) / 2)
 
 
 class CircleBuffer(object):
@@ -21,13 +16,12 @@ class CircleBuffer(object):
         self._buffer = self._buffer_elements * [0]
         step_f = 2.0 * pi / circle_steps
 
-        counter = 0
-        while counter < circle_steps:
-            x_f = cos(counter * step_f)
-            y_f = sin(counter * step_f)
-            self._buffer[counter * 2] = float_to_laserdock_xy(x_f)
-            self._buffer[counter * 2 + 1] = float_to_laserdock_xy(y_f)
-            counter += 1
+        for i in range(circle_steps):
+            x_f = cos(i * step_f)
+            y_f = sin(i * step_f)
+            self._buffer[i * 2] = float_to_laserdock_xy(x_f)
+            self._buffer[i * 2 + 1] = float_to_laserdock_xy(y_f)
+            i += 1
 
     def fill_samples(self, samples_per_packet=64):
         counter = 0
@@ -46,9 +40,15 @@ class CircleBuffer(object):
 
 
 if __name__ == '__main__':
-    a = LaserDock()
+    LD = LaserDock()
     buffer = CircleBuffer(circle_steps=3000)
     samples_per_pkt = 64
+    packet_samples = buffer.fill_samples(samples_per_packet=samples_per_pkt)
+    LD.packet_samples = packet_samples
     while True:
-        packet_samples = buffer.fill_samples(samples_per_packet=samples_per_pkt)
-        a.send_samples(packet_samples)
+        try:
+            LD.send_samples()
+        except KeyboardInterrupt:
+            print('\ninterrupt!')
+            break
+    LD.disable_output()
