@@ -33,6 +33,7 @@ class LaserDock:
         self.packet_samples = []
         if args.dummy:
             print('Running in dummy mode without connecting to a real device')
+            self.dev = None
         else:
             self.dev = self.connect()
             self.get_setting(const.COMMAND_MAJOR_FIRMWARE,               'Major Firmware Version')
@@ -117,7 +118,8 @@ class LaserDock:
             if not args.dummy:
                 self.reconnect()
         except Exception as e:
-            print(f'Uncaught exception in write_bulk: {e}')
+            if self.dev is not None:
+                print(f'Uncaught exception in write_bulk: {e}')
 
     def read_ctrl(self):
         packet_size = self.dev[0][(0, 0)][1].wMaxPacketSize
@@ -134,8 +136,9 @@ class LaserDock:
         print(f'Response from enabling output: {response}')
 
     def disable_output(self):
-        self.write_ctrl(b'\x80\x00')
-        print(self.read_ctrl())
+        if self.dev:
+            self.write_ctrl(b'\x80\x00')
+            print(self.read_ctrl())
 
     def get_setting(self, cmd, label):
         self.write_ctrl(cmd)
